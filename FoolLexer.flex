@@ -1,4 +1,8 @@
 /* Arquivo: FoolLexer.flex */
+/*
+ * Carlos Souza e Murilo Schuck
+ * Compiladores - Trabalho GA1
+ */
 
 %%
 
@@ -6,7 +10,7 @@
 %class FoolLexer
 %unicode
 
-digit = [0-9]
+digit = -?[0-9]+
 letter = [a-zA-Z]
 ident = {letter}({letter}|{digit})*
 
