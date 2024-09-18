@@ -23,6 +23,10 @@ public enum TokenType {
   RBRACE,
   SEMICOLON,
   COMMA,
+  MINUS,
+  DIVIDE,
+  NOT_EQUALS,
+  WHILE,
   IDENTIFIER,
   NUMBER,
   UNKNOWN

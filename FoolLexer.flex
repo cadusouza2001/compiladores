@@ -29,26 +29,30 @@ ident = {letter}({letter}|{digit})*
 "not"          { return 10; }
 "and"          { return 11; }
 "or"           { return 12; }
+"while"        { return 13; }
 
 /* Operadores */
-"="            { return 13; }
-"=="           { return 14; }
-"<"            { return 15; }
-">"            { return 16; }
-"+"            { return 17; }
-"*"            { return 18; }
-"("            { return 19; }
-")"            { return 20; }
-"{"            { return 21; }
-"}"            { return 22; }
-";"            { return 23; }
-","            { return 24; }
+"="            { return 14; }
+"=="           { return 15; }
+"<"            { return 16; }
+">"            { return 17; }
+"+"            { return 18; }
+"*"            { return 19; }
+"("            { return 20; }
+")"            { return 21; }
+"{"            { return 22; }
+"}"            { return 23; }
+";"            { return 24; }
+","            { return 25; }
+"-"            { return 26; }
+"/"            { return 27; }
+"!="           { return 28; }
 
 /* Identificadores */
-{ident}        { return 25; }
+{ident}        { return 29; }
 
 /* Números */
-{digit}+       { return 26; }
+{digit}+       { return 30; }
 
 /* Comentários e espaços em branco */
 "//".*         { /* Ignorar comentários de linha única */ }

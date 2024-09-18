@@ -23,20 +23,24 @@ public class TokenPrinter {
             case 10: return TokenType.NOT;
             case 11: return TokenType.AND;
             case 12: return TokenType.OR;
-            case 13: return TokenType.ASSIGN;
-            case 14: return TokenType.EQUALS;
-            case 15: return TokenType.LESS_THAN;
-            case 16: return TokenType.GREATER_THAN;
-            case 17: return TokenType.PLUS;
-            case 18: return TokenType.TIMES;
-            case 19: return TokenType.LPAREN;
-            case 20: return TokenType.RPAREN;
-            case 21: return TokenType.LBRACE;
-            case 22: return TokenType.RBRACE;
-            case 23: return TokenType.SEMICOLON;
-            case 24: return TokenType.COMMA;
-            case 25: return TokenType.IDENTIFIER;
-            case 26: return TokenType.NUMBER;
+            case 13: return TokenType.WHILE;
+            case 14: return TokenType.ASSIGN;
+            case 15: return TokenType.EQUALS;
+            case 16: return TokenType.LESS_THAN;
+            case 17: return TokenType.GREATER_THAN;
+            case 18: return TokenType.PLUS;
+            case 19: return TokenType.TIMES;
+            case 20: return TokenType.LPAREN;
+            case 21: return TokenType.RPAREN;
+            case 22: return TokenType.LBRACE;
+            case 23: return TokenType.RBRACE;
+            case 24: return TokenType.SEMICOLON;
+            case 25: return TokenType.COMMA;
+            case 26: return TokenType.MINUS;
+            case 27: return TokenType.DIVIDE;
+            case 28: return TokenType.NOT_EQUALS;
+            case 29: return TokenType.IDENTIFIER;
+            case 30: return TokenType.NUMBER;
             default: return TokenType.UNKNOWN;
         }
     }
