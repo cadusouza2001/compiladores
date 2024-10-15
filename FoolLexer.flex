@@ -1,14 +1,16 @@
 /* Arquivo: FoolLexer.flex */
 /*
  * Carlos Souza e Murilo Schuck
- * Compiladores - Trabalho GA1
+ * Compiladores - Trabalho GA2
  */
+
+import java_cup.runtime.Symbol;
 
 %%
 
-%standalone
 %class FoolLexer
 %unicode
+%cup
 
 digit = -?[0-9]+
 letter = [a-zA-Z]
@@ -17,42 +19,41 @@ ident = {letter}({letter}|{digit})*
 %%
 
 /* Palavras-chave */
-"class"        { return 1; }
-"int"          { return 2; }
-"bool"         { return 3; }
-"void"         { return 4; }
-"if"           { return 5; }
-"else"         { return 6; }
-"return"       { return 7; }
-"True"         { return 8; }
-"False"        { return 9; }
-"not"          { return 10; }
-"and"          { return 11; }
-"or"           { return 12; }
-"while"        { return 13; }
+"class"        { return new Symbol(sym.CLASS); }
+"int"          { return new Symbol(sym.INT); }
+"bool"         { return new Symbol(sym.BOOL); }
+"void"         { return new Symbol(sym.VOID); }
+"if"           { return new Symbol(sym.IF); }
+"else"         { return new Symbol(sym.ELSE); }
+"return"       { return new Symbol(sym.RETURN); }
+"True"         { return new Symbol(sym.TRUE); }
+"False"        { return new Symbol(sym.FALSE); }
+"not"          { return new Symbol(sym.NOT); }
+"and"          { return new Symbol(sym.AND); }
+"or"           { return new Symbol(sym.OR); }
 
 /* Operadores */
-"="            { return 14; }
-"=="           { return 15; }
-"<"            { return 16; }
-">"            { return 17; }
-"+"            { return 18; }
-"*"            { return 19; }
-"("            { return 20; }
-")"            { return 21; }
-"{"            { return 22; }
-"}"            { return 23; }
-";"            { return 24; }
-","            { return 25; }
-"-"            { return 26; }
-"/"            { return 27; }
-"!="           { return 28; }
+"="            { return new Symbol(sym.ASSIGN); }
+"=="           { return new Symbol(sym.EQ); }
+"<"            { return new Symbol(sym.LT); }
+">"            { return new Symbol(sym.GT); }
+"+"            { return new Symbol(sym.PLUS); }
+"*"            { return new Symbol(sym.TIMES); }
+"("            { return new Symbol(sym.LPAREN); }
+")"            { return new Symbol(sym.RPAREN); }
+"{"            { return new Symbol(sym.LBRACE); }
+"}"            { return new Symbol(sym.RBRACE); }
+";"            { return new Symbol(sym.SEMICOLON); }
+","            { return new Symbol(sym.COMMA); }
+"-"            { return new Symbol(sym.MINUS); }
+"/"            { return new Symbol(sym.DIVIDE); }
+"!="           { return new Symbol(sym.NEQ); }
 
 /* Identificadores */
-{ident}        { return 29; }
+{ident}        { return new Symbol(sym.IDENTIFIER); }
 
 /* Números */
-{digit}+       { return 30; }
+{digit}+       { return new Symbol(sym.INT_CONST); }
 
 /* Comentários e espaços em branco */
 "//".*         { /* Ignorar comentários de linha única */ }

@@ -12,24 +12,27 @@ Build a lexical analyzer for a simple object-oriented language called FOOL (Fake
 ## Prerequisites
 
 - Java Development Kit (JDK) installed
-- JFlex installed
 
 ## Setup and Running
 
 1. **Generate the Lexer:**
 
    ```sh
-   jflex FoolLexer.flex
+   java -jar libs/jflex-full-1.9.1.jar FoolLexer.flex
    ```
 
-2. **Compile the Lexer:**
+2. **Generate the Parser:**
 
    ```sh
-   javac FoolLexer.java
+   java -jar libs/java-cup-11b.jar -parser FoolParser -symbols sym FoolParser.cup
    ```
 
-3. **Compile and Run the Test:**
+3. **Compile the Lexer and Parser**
    ```sh
-   javac TokenPrinter.java
-   java TokenPrinter
+   javac -cp ".:libs/*" *.java
+   ```
+
+4. **Run the Parser on a Test File**
+   ```sh
+   java -cp ".:libs/*" FoolParser test2.fool
    ```
