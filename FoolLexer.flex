@@ -45,15 +45,15 @@ ident = {letter}({letter}|{digit})*
 "}"            { return new Symbol(sym.RBRACE); }
 ";"            { return new Symbol(sym.SEMICOLON); }
 ","            { return new Symbol(sym.COMMA); }
-/* "-"            { return new Symbol(sym.MINUS); } */
-/* "/"            { return new Symbol(sym.DIVIDE); } */
+"-"            { return new Symbol(sym.MINUS); }
+"/"            { return new Symbol(sym.DIVIDE); }
 "!="           { return new Symbol(sym.NEQ); }
 
 /* Identificadores */
 {ident}        { return new Symbol(sym.IDENTIFIER); }
 
 /* Números */
-{digit}+       { return new Symbol(sym.NUMBER); }
+{digit}+       { return new Symbol(sym.INT_CONST); }
 
 /* Comentários e espaços em branco */
 "//".*         { /* Ignorar comentários de linha única */ }

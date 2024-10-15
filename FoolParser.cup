@@ -11,11 +11,39 @@ parser code {:
     FoolParser parser = new FoolParser(lexer);
     parser.parse();
   }
+
+  public void report_error(String message, Object info) {
+        StringBuilder m = new StringBuilder("Error");
+
+        if (info instanceof java_cup.runtime.Symbol) {
+            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+
+            if (s.value != null) {
+                m.append(": value: " + s.value.toString() + " - ");
+            }
+
+            if (s.left >= 0) {
+                m.append("in line "+(s.left+1));
+                if (s.right >= 0)
+                    m.append(", column "+(s.right+1));
+            }
+        }
+
+        m.append(" : " + message);
+
+        System.err.println("\n" + m);
+    }
+
+    public void report_fatal_error(String message, Object info) {
+        report_error(message, info);
+        System.exit(1);
+    }
+
 :};
 
 /* Declaração dos Terminais */
 terminal CLASS, INT, BOOL, VOID, IF, ELSE, RETURN, TRUE, FALSE, NOT, AND, OR;
-terminal EQ, NEQ, LT, GT, PLUS, TIMES, ASSIGN;
+terminal EQ, NEQ, LT, GT, PLUS, TIMES, ASSIGN, DIVIDE, MINUS;
 terminal LPAREN, RPAREN, LBRACE, RBRACE, SEMICOLON, COMMA;
 terminal IDENTIFIER, INT_CONST;
 
@@ -36,7 +64,7 @@ non terminal else_command;
 
 /* Precedências */
 precedence left ELSE;
-precedence left PLUS, TIMES;
+precedence left MINUS, PLUS, TIMES, DIVIDE;
 precedence left AND, OR;
 precedence left EQ, NEQ, LT, GT; 
 
@@ -75,6 +103,8 @@ else_command ::= /* vazio */
 
 expr ::= expr PLUS expr
        | expr TIMES expr
+       | expr DIVIDE expr
+       | expr MINUS expr
        | expr EQ expr
        | expr NEQ expr
        | expr LT expr
