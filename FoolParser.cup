@@ -15,9 +15,9 @@ parser code {:
 
 /* Declaração dos Terminais */
 terminal CLASS, INT, BOOL, VOID, IF, ELSE, RETURN, TRUE, FALSE, NOT, AND, OR;
-terminal EQ, LT, GT, PLUS, TIMES, ASSIGN, NEQ;
+terminal EQ, NEQ, LT, GT, PLUS, TIMES, ASSIGN;
 terminal LPAREN, RPAREN, LBRACE, RBRACE, SEMICOLON, COMMA;
-terminal IDENTIFIER, NUMBER;
+terminal IDENTIFIER, INT_CONST;
 
 /* Declaração dos Não Terminais */
 non terminal program;
@@ -35,6 +35,7 @@ non terminal if_command;
 non terminal else_command;
 
 /* Precedências */
+precedence left ELSE;
 precedence left PLUS, TIMES;
 precedence left AND, OR;
 precedence left EQ, NEQ, LT, GT; 
@@ -65,10 +66,12 @@ command ::= IDENTIFIER ASSIGN expr SEMICOLON
           | if_command
           | RETURN expr SEMICOLON;
 
-if_command ::= IF LPAREN expr RPAREN command else_command;
+if_command ::= IF LPAREN expr RPAREN command
+             | IF LPAREN expr RPAREN command ELSE command;
 
-else_command ::= ELSE command; /* como fazer ser possivel sem dizer o else? */
 
+else_command ::= /* vazio */
+               | ELSE command;
 
 expr ::= expr PLUS expr
        | expr TIMES expr
@@ -80,7 +83,7 @@ expr ::= expr PLUS expr
        | expr AND expr
        | expr OR expr
        | IDENTIFIER
-       | NUMBER
+       | INT_CONST
        | TRUE
        | FALSE;
 
