@@ -21,6 +21,13 @@ Build a lexical analyzer for a simple object-oriented language called FOOL (Fake
    java -jar libs/jflex-full-1.9.1.jar FoolLexer.flex
    ```
 
+2. **Compile AST and Node**
+
+```sh
+ javac Node.java
+ javac AST.java
+```
+
 2. **Generate the Parser:**
 
    ```sh
@@ -28,11 +35,12 @@ Build a lexical analyzer for a simple object-oriented language called FOOL (Fake
    ```
 
 3. **Compile the Lexer and Parser**
+
    ```sh
-   javac -cp ".:libs/*" *.java
+   javac -cp ".;libs/*" *.java
    ```
 
 4. **Run the Parser on a Test File**
    ```sh
-   java -cp ".:libs/*" FoolParser test2.fool
+   java -cp ".;libs/*" FoolParser test2.fool
    ```

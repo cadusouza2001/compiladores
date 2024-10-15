@@ -53,7 +53,7 @@ ident = {letter}({letter}|{digit})*
 {ident}        { return new Symbol(sym.IDENTIFIER); }
 
 /* Números */
-{digit}+       { return new Symbol(sym.NUMBER); }
+{digit}+       { return new Symbol(sym.INT_CONST); }
 
 /* Comentários e espaços em branco */
 "//".*         { /* Ignorar comentários de linha única */ }
