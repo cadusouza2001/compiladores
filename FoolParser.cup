@@ -48,19 +48,19 @@ terminal LPAREN, RPAREN, LBRACE, RBRACE, SEMICOLON, COMMA;
 terminal IDENTIFIER, INT_CONST;
 
 /* Declaração dos Não Terminais */
-non terminal program;
-non terminal class_decl;
-non terminal method_decl;
-non terminal attr_decl;
-non terminal attr_decls;
-non terminal method_decls;
-non terminal type;
-non terminal expr;
-non terminal command;
-non terminal command_list;
-non terminal argument_list;
-non terminal if_command;
-non terminal else_command;
+non terminal Node program;
+non terminal Node class_decl;
+non terminal Node method_decl;
+non terminal Node attr_decl;
+non terminal Node attr_decls;
+non terminal Node method_decls;
+non terminal Node type;
+non terminal Node expr;
+non terminal Node command;
+non terminal Node command_list;
+non terminal Node argument_list;
+non terminal Node if_command;
+non terminal Node else_command;
 
 /* Precedências */
 precedence left ELSE;
@@ -69,54 +69,86 @@ precedence left AND, OR;
 precedence left EQ, NEQ, LT, GT; 
 
 /* Regras de Produção */
-program ::= class_decl;                 
+program ::= class_decl:c
+    {: RESULT = c; :};                 
 
-class_decl ::= CLASS IDENTIFIER LBRACE attr_decls method_decls RBRACE;  
+class_decl ::= CLASS:cls IDENTIFIER:id LBRACE:lbrace attr_decls:attrs method_decls:meths RBRACE:rbrace
+    {: RESULT = new Node(cls.toString(), id.toString(), attrs, meths); :};  
 
 attr_decls ::= /* vazio */
-            | attr_decls attr_decl;
+    {: RESULT = new Node("empty_attr_decls"); :}
+            | attr_decls:prev attr_decl:attr
+    {: RESULT = new Node("attr_decls", prev, attr); :};
 
 method_decls ::= /* vazio */
-              | method_decl method_decls;
+    {: RESULT = new Node("empty_method_decls"); :}
+              | method_decl:meth method_decls:prev
+    {: RESULT = new Node("method_decls", meth, prev); :};
 
-attr_decl ::= type IDENTIFIER SEMICOLON;
+attr_decl ::= type:t IDENTIFIER:id SEMICOLON:semi
+    {: RESULT = new Node("attr_decl", t, id.toString()); :};
 
-method_decl ::= type IDENTIFIER LPAREN argument_list RPAREN LBRACE command_list RBRACE;
+method_decl ::= type:t IDENTIFIER:id LPAREN:lparen argument_list:args RPAREN:rparen LBRACE:lbrace command_list:cmds RBRACE:rbrace
+    {: RESULT = new Node("method_decl", t, id.toString(), args, cmds); :};
 
 argument_list ::= /* vazio */
-               | argument_list COMMA type IDENTIFIER
-               | type IDENTIFIER;
+    {: RESULT = new Node("empty_arg_list"); :}
+               | argument_list:prev COMMA:comma type:t IDENTIFIER:id
+    {: RESULT = new Node("arg_list", prev, t, id.toString()); :}
+               | type:t IDENTIFIER:id
+    {: RESULT = new Node("arg_list_single", t, id.toString()); :};
 
 command_list ::= /* vazio */
-              | command_list command;
+    {: RESULT = new Node("empty_command_list"); :}
+              | command_list:prev command:cmd
+    {: RESULT = new Node("command_list", prev, cmd); :};
 
-command ::= IDENTIFIER ASSIGN expr SEMICOLON
-          | if_command
-          | RETURN expr SEMICOLON;
+command ::= IDENTIFIER:id ASSIGN:assign expr:e SEMICOLON:semi
+    {: RESULT = new Node("assign_command", id.toString(), e); :}
+          | if_command:ifc
+    {: RESULT = ifc; :}
+          | RETURN:returnkw expr:e SEMICOLON:semi
+    {: RESULT = new Node("return_command", e); :};
 
-if_command ::= IF LPAREN expr RPAREN command
-             | IF LPAREN expr RPAREN command ELSE command;
+if_command ::= IF:ifkw LPAREN:lparen expr:e RPAREN:rparen command:cmd
+    {: RESULT = new Node("if_command", e, cmd); :}
+             | IF:ifkw LPAREN:lparen expr:e RPAREN:rparen command:cmd ELSE:elsekw command:elsecmd
+    {: RESULT = new Node("if_else_command", e, cmd, elsecmd); :};
 
+expr ::= expr:left PLUS:plus expr:right
+    {: RESULT = new Node(plus.toString(), left, right); :}
+       | expr:left TIMES:times expr:right
+    {: RESULT = new Node(times.toString(), left, right); :}
+       | expr:left DIVIDE:divide expr:right
+    {: RESULT = new Node(divide.toString(), left, right); :}
+       | expr:left MINUS:minus expr:right
+    {: RESULT = new Node(minus.toString(), left, right); :}
+       | expr:left EQ:eq expr:right
+    {: RESULT = new Node(eq.toString(), left, right); :}
+       | expr:left NEQ:neq expr:right
+    {: RESULT = new Node(neq.toString(), left, right); :}
+       | expr:left LT:lt expr:right
+    {: RESULT = new Node(lt.toString(), left, right); :}
+       | expr:left GT:gt expr:right
+    {: RESULT = new Node(gt.toString(), left, right); :}
+       | NOT:notkw expr:e
+    {: RESULT = new Node(notkw.toString(), e); :}
+       | expr:left AND:and expr:right
+    {: RESULT = new Node(and.toString(), left, right); :}
+       | expr:left OR:or expr:right
+    {: RESULT = new Node(or.toString(), left, right); :}
+       | IDENTIFIER:id
+    {: RESULT = new Node("identifier", id.toString()); :}
+       | INT_CONST:num
+    {: RESULT = new Node("int_const", num.toString()); :}
+       | TRUE:tru
+    {: RESULT = new Node("true", tru.toString()); :}
+       | FALSE:fal
+    {: RESULT = new Node("false", fal.toString()); :};
 
-else_command ::= /* vazio */
-               | ELSE command;
-
-expr ::= expr PLUS expr
-       | expr TIMES expr
-       | expr DIVIDE expr
-       | expr MINUS expr
-       | expr EQ expr
-       | expr NEQ expr
-       | expr LT expr
-       | expr GT expr
-       | NOT expr
-       | expr AND expr
-       | expr OR expr
-       | IDENTIFIER
-       | INT_CONST
-       | TRUE
-       | FALSE;
-
-type ::= INT
-       | BOOL
-       | VOID;
+type ::= INT:intkw
+    {: RESULT = new Node("type_int", intkw.toString()); :}
+       | BOOL:boolkw
+    {: RESULT = new Node("type_bool", boolkw.toString()); :}
+       | VOID:voidkw
+    {: RESULT = new Node("type_void", voidkw.toString()); :};

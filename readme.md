@@ -28,11 +28,12 @@ Build a lexical analyzer for a simple object-oriented language called FOOL (Fake
    ```
 
 3. **Compile the Lexer and Parser**
+
    ```sh
-   javac -cp ".:libs/*" *.java
+   javac -cp ".;libs/*" *.java
    ```
 
 4. **Run the Parser on a Test File**
    ```sh
-   java -cp ".:libs/*" FoolParser test2.fool
+   java -cp ".;libs/*" FoolParser test2.fool
    ```
