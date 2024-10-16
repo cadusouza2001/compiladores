@@ -9,8 +9,9 @@ parser code {:
     FoolLexer lexer = new FoolLexer(new java.io.FileReader(args[0]));
 
     FoolParser parser = new FoolParser(lexer);
-    parser.parse();
-  }
+    Node root = (Node) parser.parse().value;
+    root.print();  
+}
 
   public void report_error(String message, Object info) {
         StringBuilder m = new StringBuilder("Error");
@@ -73,7 +74,7 @@ program ::= class_decl:c
     {: RESULT = c; :};                 
 
 class_decl ::= CLASS:cls IDENTIFIER:id LBRACE:lbrace attr_decls:attrs method_decls:meths RBRACE:rbrace
-    {: RESULT = new Node(cls.toString(), id.toString(), attrs, meths); :};  
+    {: RESULT = new Node(cls != null ? cls.toString() : "cls", id != null ? id.toString() : "id", attrs, meths); :};  
 
 attr_decls ::= /* vazio */
     {: RESULT = new Node("empty_attr_decls"); :}
@@ -86,17 +87,17 @@ method_decls ::= /* vazio */
     {: RESULT = new Node("method_decls", meth, prev); :};
 
 attr_decl ::= type:t IDENTIFIER:id SEMICOLON:semi
-    {: RESULT = new Node("attr_decl", t, id.toString()); :};
+    {: RESULT = new Node("attr_decl", t, id != null ? id.toString() : "id"); :};
 
 method_decl ::= type:t IDENTIFIER:id LPAREN:lparen argument_list:args RPAREN:rparen LBRACE:lbrace command_list:cmds RBRACE:rbrace
-    {: RESULT = new Node("method_decl", t, id.toString(), args, cmds); :};
+    {: RESULT = new Node("method_decl", t, id != null ? id.toString() : "id", args, cmds); :};
 
 argument_list ::= /* vazio */
     {: RESULT = new Node("empty_arg_list"); :}
                | argument_list:prev COMMA:comma type:t IDENTIFIER:id
-    {: RESULT = new Node("arg_list", prev, t, id.toString()); :}
+    {: RESULT = new Node("arg_list", prev, t, id != null ? id.toString() : "id"); :}
                | type:t IDENTIFIER:id
-    {: RESULT = new Node("arg_list_single", t, id.toString()); :};
+    {: RESULT = new Node("arg_list_single", t, id != null ? id.toString() : "id"); :};
 
 command_list ::= /* vazio */
     {: RESULT = new Node("empty_command_list"); :}
@@ -104,7 +105,7 @@ command_list ::= /* vazio */
     {: RESULT = new Node("command_list", prev, cmd); :};
 
 command ::= IDENTIFIER:id ASSIGN:assign expr:e SEMICOLON:semi
-    {: RESULT = new Node("assign_command", id.toString(), e); :}
+    {: RESULT = new Node("assign_command", id != null ? id.toString() : "id", e); :}
           | if_command:ifc
     {: RESULT = ifc; :}
           | RETURN:returnkw expr:e SEMICOLON:semi
@@ -116,39 +117,39 @@ if_command ::= IF:ifkw LPAREN:lparen expr:e RPAREN:rparen command:cmd
     {: RESULT = new Node("if_else_command", e, cmd, elsecmd); :};
 
 expr ::= expr:left PLUS:plus expr:right
-    {: RESULT = new Node(plus.toString(), left, right); :}
+    {: RESULT = new Node(plus != null ? plus.toString() : "plus", left, right); :}
        | expr:left TIMES:times expr:right
-    {: RESULT = new Node(times.toString(), left, right); :}
+    {: RESULT = new Node(times != null ? times.toString() : "times", left, right); :}
        | expr:left DIVIDE:divide expr:right
-    {: RESULT = new Node(divide.toString(), left, right); :}
+    {: RESULT = new Node(divide != null ? divide.toString() : "divide", left, right); :}
        | expr:left MINUS:minus expr:right
-    {: RESULT = new Node(minus.toString(), left, right); :}
+    {: RESULT = new Node(minus != null ? minus.toString() : "minus", left, right); :}
        | expr:left EQ:eq expr:right
-    {: RESULT = new Node(eq.toString(), left, right); :}
+    {: RESULT = new Node(eq != null ? eq.toString() : "eq", left, right); :}
        | expr:left NEQ:neq expr:right
-    {: RESULT = new Node(neq.toString(), left, right); :}
+    {: RESULT = new Node(neq != null ? neq.toString() : "neq", left, right); :}
        | expr:left LT:lt expr:right
-    {: RESULT = new Node(lt.toString(), left, right); :}
+    {: RESULT = new Node(lt != null ? lt.toString() : "lt", left, right); :}
        | expr:left GT:gt expr:right
-    {: RESULT = new Node(gt.toString(), left, right); :}
+    {: RESULT = new Node(gt != null ? gt.toString() : "gt", left, right); :}
        | NOT:notkw expr:e
-    {: RESULT = new Node(notkw.toString(), e); :}
+    {: RESULT = new Node(notkw != null ? notkw.toString() : "notkw", e); :}
        | expr:left AND:and expr:right
-    {: RESULT = new Node(and.toString(), left, right); :}
+    {: RESULT = new Node(and != null ? and.toString() : "and", left, right); :}
        | expr:left OR:or expr:right
-    {: RESULT = new Node(or.toString(), left, right); :}
+    {: RESULT = new Node(or != null ? or.toString() : "or", left, right); :}
        | IDENTIFIER:id
-    {: RESULT = new Node("identifier", id.toString()); :}
+    {: RESULT = new Node("identifier", id != null ? id.toString() : "id"); :}
        | INT_CONST:num
-    {: RESULT = new Node("int_const", num.toString()); :}
+    {: RESULT = new Node("int_const", num != null ? num.toString() : "num"); :}
        | TRUE:tru
-    {: RESULT = new Node("true", tru.toString()); :}
+    {: RESULT = new Node("true", tru != null ? tru.toString() : "tru"); :}
        | FALSE:fal
-    {: RESULT = new Node("false", fal.toString()); :};
+    {: RESULT = new Node("false", fal != null ? fal.toString() : "fal"); :};
 
 type ::= INT:intkw
-    {: RESULT = new Node("type_int", intkw.toString()); :}
+    {: RESULT = new Node("type_int", intkw != null ? intkw.toString() : "intkw"); :}
        | BOOL:boolkw
-    {: RESULT = new Node("type_bool", boolkw.toString()); :}
+    {: RESULT = new Node("type_bool", boolkw != null ? boolkw.toString() : "boolkw"); :}
        | VOID:voidkw
-    {: RESULT = new Node("type_void", voidkw.toString()); :};
+    {: RESULT = new Node("type_void", voidkw != null ? voidkw.toString() : "voidkw"); :};
