@@ -76,10 +76,10 @@ program ::= class_decl:c
 class_decl ::= CLASS:cls IDENTIFIER:id LBRACE:lbrace attr_decls:attrs method_decls:meths RBRACE:rbrace
     {: RESULT = new Node(cls != null ? cls.toString() : "cls", id != null ? id.toString() : "id", attrs, meths); :};  
 
-attr_decls ::= /* vazio */
-    {: RESULT = new Node("empty_attr_decls"); :}
+attr_decls ::= 
+    {: RESULT = new Node("attr_decls"); :}
             | attr_decls:prev attr_decl:attr
-    {: RESULT = new Node("attr_decls", prev, attr); :};
+    {: prev.addChild(attr); RESULT = prev; :};
 
 method_decls ::= /* vazio */
     {: RESULT = new Node("empty_method_decls"); :}
@@ -114,7 +114,11 @@ command ::= IDENTIFIER:id ASSIGN:assign expr:e SEMICOLON:semi
 if_command ::= IF:ifkw LPAREN:lparen expr:e RPAREN:rparen command:cmd
     {: RESULT = new Node("if_command", e, cmd); :}
              | IF:ifkw LPAREN:lparen expr:e RPAREN:rparen command:cmd ELSE:elsekw command:elsecmd
-    {: RESULT = new Node("if_else_command", e, cmd, elsecmd); :};
+        {: 
+        Node ifNode = new Node("if_command", e, cmd);
+        Node elseNode = new Node("else_command", elsecmd);
+        RESULT = new Node("if_else_command", ifNode, elseNode); 
+    :};
 
 expr ::= expr:left PLUS:plus expr:right
     {: RESULT = new Node(plus != null ? plus.toString() : "plus", left, right); :}
@@ -139,17 +143,17 @@ expr ::= expr:left PLUS:plus expr:right
        | expr:left OR:or expr:right
     {: RESULT = new Node(or != null ? or.toString() : "or", left, right); :}
        | IDENTIFIER:id
-    {: RESULT = new Node("identifier", id != null ? id.toString() : "id"); :}
+    {: RESULT = new Node("identifier"); :}
        | INT_CONST:num
-    {: RESULT = new Node("int_const", num != null ? num.toString() : "num"); :}
+    {: RESULT = new Node("int_const"); :}
        | TRUE:tru
-    {: RESULT = new Node("true", tru != null ? tru.toString() : "tru"); :}
+    {: RESULT = new Node("true"); :}
        | FALSE:fal
-    {: RESULT = new Node("false", fal != null ? fal.toString() : "fal"); :};
+    {: RESULT = new Node("false"); :};
 
 type ::= INT:intkw
-    {: RESULT = new Node("type_int", intkw != null ? intkw.toString() : "intkw"); :}
+        {: RESULT = new Node("type_int"); :}
        | BOOL:boolkw
-    {: RESULT = new Node("type_bool", boolkw != null ? boolkw.toString() : "boolkw"); :}
+    {: RESULT = new Node("type_bool"); :}
        | VOID:voidkw
-    {: RESULT = new Node("type_void", voidkw != null ? voidkw.toString() : "voidkw"); :};
+    {: RESULT = new Node("type_void"); :};
