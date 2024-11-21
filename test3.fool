@@ -1,0 +1,6 @@
+class Test {
+  int x;
+  void method() {
+    while (x == 10) x = 10;
+  }
+}

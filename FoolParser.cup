@@ -1,7 +1,7 @@
 /* Arquivo: FoolParser.cup */
 /*
  * Carlos Souza e Murilo Schuck
- * Compiladores - Trabalho GA2
+ * Compiladores - Trabalho GB
  */
 
 parser code {:
@@ -47,6 +47,8 @@ terminal CLASS, INT, BOOL, VOID, IF, ELSE, RETURN, TRUE, FALSE, NOT, AND, OR;
 terminal EQ, NEQ, LT, GT, PLUS, TIMES, ASSIGN, DIVIDE, MINUS;
 terminal LPAREN, RPAREN, LBRACE, RBRACE, SEMICOLON, COMMA;
 terminal IDENTIFIER, INT_CONST;
+terminal WHILE;
+terminal MAIN;
 
 /* Declaração dos Não Terminais */
 non terminal Node program;
@@ -62,6 +64,8 @@ non terminal Node command_list;
 non terminal Node argument_list;
 non terminal Node if_command;
 non terminal Node else_command;
+non terminal Node while_command;
+non terminal Node main_decl;
 
 /* Precedências */
 precedence left ELSE;
@@ -84,7 +88,12 @@ attr_decls ::=
 method_decls ::= /* vazio */
     {: RESULT = new Node("empty_method_decls"); :}
               | method_decl:meth method_decls:prev
-    {: RESULT = new Node("method_decls", meth, prev); :};
+    {: RESULT = new Node("method_decls", meth, prev); :}
+              | main_decl:main method_decls:prev
+    {: RESULT = new Node("method_decls_with_main", main, prev); :};
+
+main_decl ::= VOID:voidkw MAIN:mainkw LPAREN:lparen RPAREN:rparen LBRACE:lbrace command_list:cmds RBRACE:rbrace
+    {: RESULT = new Node("main_decl", cmds); :};
 
 attr_decl ::= type:t IDENTIFIER:id SEMICOLON:semi
     {: RESULT = new Node("attr_decl", t, id != null ? id.toString() : "id"); :};
@@ -109,7 +118,12 @@ command ::= IDENTIFIER:id ASSIGN:assign expr:e SEMICOLON:semi
           | if_command:ifc
     {: RESULT = ifc; :}
           | RETURN:returnkw expr:e SEMICOLON:semi
-    {: RESULT = new Node("return_command", e); :};
+    {: RESULT = new Node("return_command", e); :}
+          | while_command:whilec
+    {: RESULT = whilec; :};
+
+while_command ::= WHILE:whilekw LPAREN:lparen expr:cond RPAREN:rparen command:body
+    {: RESULT = new Node("while_command", cond, body); :};
 
 if_command ::= IF:ifkw LPAREN:lparen expr:e RPAREN:rparen command:cmd
     {: RESULT = new Node("if_command", e, cmd); :}

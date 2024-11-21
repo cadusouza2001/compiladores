@@ -31,6 +31,7 @@ ident = {letter}({letter}|{digit})*
 "not"          { return new Symbol(sym.NOT); }
 "and"          { return new Symbol(sym.AND); }
 "or"           { return new Symbol(sym.OR); }
+"while"        { return new Symbol(sym.WHILE); }
 
 /* Operadores */
 "="            { return new Symbol(sym.ASSIGN); }
