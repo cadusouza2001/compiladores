@@ -13,11 +13,12 @@ parser code {:
     root.print();  
 }
 
-  public void report_error(String message, Object info) {
+    public void report_error(String message, Object info) {
         StringBuilder m = new StringBuilder("Error");
+        java_cup.runtime.Symbol s = null;
 
         if (info instanceof java_cup.runtime.Symbol) {
-            java_cup.runtime.Symbol s = ((java_cup.runtime.Symbol) info);
+            s = (java_cup.runtime.Symbol) info;
 
             if (s.value != null) {
                 m.append(": value: " + s.value.toString() + " - ");
@@ -31,6 +32,13 @@ parser code {:
         }
 
         m.append(" : " + message);
+
+        if (s != null) {
+        String tokenName = (s.sym >= 0 && s.sym < sym.terminalNames.length) ? sym.terminalNames[s.sym] : "UNKNOWN TOKEN";
+        System.err.println("Failed at token: " + tokenName);
+    } else {
+        System.err.println("Failed at token: unknown");
+    }
 
         System.err.println("\n" + m);
     }
@@ -78,7 +86,7 @@ program ::= class_decl:c
     {: RESULT = c; :};                 
 
 class_decl ::= CLASS:cls IDENTIFIER:id LBRACE:lbrace attr_decls:attrs method_decls:meths RBRACE:rbrace
-    {: RESULT = new Node(cls != null ? cls.toString() : "cls", id != null ? id.toString() : "id", attrs, meths); :};  
+    {: RESULT = new Node(cls != null ? cls.toString() : "cls", id != null ? id.toString() : "id", attrs, meths); :};
 
 attr_decls ::= 
     {: RESULT = new Node("attr_decls"); :}
@@ -88,7 +96,10 @@ attr_decls ::=
 method_decls ::= method_decl:meth method_decls:prev
     {: RESULT = new Node("method_decls", meth, prev); :}
               | main_decl:meth
-    {: RESULT = new Node("method_decls_main", meth); :};
+    {: RESULT = new Node("method_decls_main", meth); :}
+              | /* vazio */
+    {: RESULT = new Node("method_decls_empty"); :};  // Adicionar produção vazia para casos sem métodos
+
 
 main_decl ::= VOID:voidkw MAIN:mainkw LPAREN:lparen RPAREN:rparen LBRACE:lbrace command_list:cmds RBRACE:rbrace
     {: RESULT = new Node("main_decl", cmds); :};
