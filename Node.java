@@ -29,7 +29,6 @@ public class Node {
         }
     }
 
-    // New constructors
     public Node(String value, String str, Node node) {
         this.value = value;
         this.children = new ArrayList<>();
@@ -123,6 +122,14 @@ public class Node {
         this.children.add(node2);
         this.children.add(node3);
         this.children.add(node4);
+    }
+
+    public Node(String value, String str1, String str2, Node child) {
+        this.value = value;
+        this.children = new ArrayList<>();
+        this.children.add(new Node(str1));
+        this.children.add(new Node(str2));
+        this.children.add(child);
     }
 
     public void addChild(Node child) {

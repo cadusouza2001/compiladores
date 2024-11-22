@@ -1,6 +1,7 @@
 class Test {
   int x;
-  void method() {
-    while (x == 10) x = 10;
+  void main() {
+    x = 10;
+    if (x > 5) x = x + 1;
   }
 }
