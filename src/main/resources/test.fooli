@@ -1,0 +1,19 @@
+{ class BasicClass
+    int num;
+    bool flag;
+
+    int increment(int value) {
+        return value + 1;
+    }
+
+    void main() {
+        num = 0;
+        flag = True;
+
+        if (flag) num = 10; else num = 5;
+
+        while (num < 15) num = increment(num);
+
+        flag = not flag;
+    }
+}

@@ -1,0 +1,36 @@
+=== Symbol Table ===
+  Variable(name='num', type=int)
+  Variable(name='flag', type=bool)
+  Method(name='increment', return=int, params=(int value))
+    Variable(name='value', type=int)
+  Method(name='main', return=void, params=())
+
+
+=== Intermediate Code ===
+
+increment:
+param value
+t0 = t1 PLUS t2
+return t0
+
+main:
+num = t3
+flag = t4
+ifTrue t5 goto then_0
+ifFalse t5 goto else_1
+t6 = t7 LT t8
+while t6 goto body_2
+t9 = NOT t10
+flag = t9
+
+body_2:
+t11 = call increment
+num = t11
+
+then_0:
+num = t12
+
+else_1:
+num = t13
+
+

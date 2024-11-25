@@ -1,0 +1,251 @@
+package fooli;
+
+/* Arquivo: FoolParser.cup */
+/*
+ * Carlos Souza e Murilo Schuck
+ * Compiladores - Trabalho GB
+ */
+
+import java_cup.runtime.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import fooli.abstractSyntaxTree.*;
+import fooli.abstractSyntaxTree.declaration.*;
+import fooli.abstractSyntaxTree.expression.*;
+import fooli.abstractSyntaxTree.method.*;
+import fooli.abstractSyntaxTree.statement.*;
+import fooli.type.*;
+
+parser code {:
+    public void report_error(String message, Object info) {
+        Symbol symbol = (Symbol) info;
+        String error = "Token '" + symbol.value + "' encontrado não esperado.";
+        System.err.println(error);
+        super.report_error(message, info);
+    }
+
+    public void report_fatal_error(String message, Object info) {
+        report_error(message, info);
+        throw new RuntimeException("Erro fatal de sintaxe. Parsing abortado.");
+    }
+:}
+
+terminal CLASS, VOID, INT, BOOL, IF, ELSE, RETURN, EQ, LT, GT, PLUS, TIMES, ASSIGN, NOT, AND, OR, LPAREN, RPAREN, LBRACE, RBRACE, SEMICOLON, COMMA, WHILE;
+terminal String IDENTIFIER;
+terminal Integer INT_CONST;
+terminal Boolean TRUE, FALSE;
+
+non terminal ClassDeclaration class_decl;
+non terminal List decl_list;
+non terminal Node declaration;
+non terminal VariableDeclaration var_decl;
+non terminal Method method_decl;
+non terminal MethodCall method_call;
+non terminal Type var_type;
+non terminal Statement stmt;
+non terminal List<Statement> stmt_list;
+non terminal Expression expr;
+non terminal List<Expression> expr_list;
+non terminal List<Expression> expr_list_non_empty;
+non terminal List<VariableDeclaration> arg_list;
+non terminal List<VariableDeclaration> arg_list_non_empty;
+
+precedence left ELSE;
+precedence nonassoc IF;
+precedence left OR;
+precedence left AND;
+precedence left EQ;
+precedence left LT, GT;
+precedence left PLUS;
+precedence left TIMES;
+precedence right NOT;
+
+start with class_decl;
+
+class_decl ::= LBRACE CLASS IDENTIFIER:name decl_list:dl RBRACE
+                {:
+                    List<VariableDeclaration> fields = new ArrayList<>();
+                    List<Method> methods = new ArrayList<>();
+                    for (var decl : dl) {
+                        if (decl instanceof VariableDeclaration) {
+                            fields.add((VariableDeclaration) decl);
+                        } else {
+                            methods.add((Method) decl);
+                        }
+                    }
+                    RESULT = new ClassDeclaration(name, fields, methods);
+                :};
+
+decl_list ::= /* vazio */
+                {:
+                    RESULT = new ArrayList<>();
+                :}
+            | decl_list:l declaration:d
+                {:
+                    l.add(d);
+                    RESULT = l;
+                :};
+
+declaration ::= var_decl:vd
+                {:
+                    RESULT = vd;
+                :}
+              | method_decl:md
+                {:
+                    RESULT = md;
+                :};
+
+var_decl ::= var_type:vt IDENTIFIER:var_name SEMICOLON
+                {:
+                    RESULT = new VariableDeclaration(vt, var_name);
+                :};
+
+method_decl ::= var_type:rt IDENTIFIER:id LPAREN arg_list:args RPAREN LBRACE stmt_list:sl RBRACE
+                {:
+                    Method method = new Method(rt, id, args, sl);
+                    RESULT = method;
+                :}
+            | VOID IDENTIFIER:id LPAREN arg_list:args RPAREN LBRACE stmt_list:sl RBRACE
+                {:
+                    Method method = new Method(new VoidType(), id, args, sl);
+                    RESULT = method;
+                :};
+
+arg_list ::= /* vazio */
+           | arg_list_non_empty:l
+                {:
+                    RESULT = l;
+                :};
+
+arg_list_non_empty ::= var_type:t IDENTIFIER:id
+                        {:
+                            RESULT = new ArrayList<>();
+                            RESULT.add(new VariableDeclaration(t, id));
+                        :}
+                     | arg_list_non_empty:l COMMA var_type:t IDENTIFIER:id
+                        {:
+                            l.add(new VariableDeclaration(t, id));
+                            RESULT = l;
+                        :};
+
+var_type ::= INT   {: RESULT = new IntType(); :}
+           | BOOL  {: RESULT = new BoolType(); :};
+
+method_call ::= IDENTIFIER:method_name LPAREN expr_list:args RPAREN
+                {:
+                    RESULT = new MethodCall(method_name, args);
+                :};
+
+stmt_list ::= /* vazio */
+                {:
+                    RESULT = new ArrayList<>();
+                :}
+            | stmt_list:l stmt:s
+                {:
+                    l.add(s);
+                    RESULT = l;
+                :};
+
+stmt ::= IDENTIFIER:id ASSIGN expr:e SEMICOLON
+            {:
+                RESULT = new AssignmentStatement(id, e);
+            :}
+       | IF LPAREN expr:condition RPAREN stmt:then
+            {:
+                RESULT = new IfStatement(condition, then);
+            :}
+       | IF LPAREN expr:condition RPAREN stmt:then ELSE stmt:otherwise
+            {:
+                RESULT = new IfElseStatement(condition, then, otherwise);
+            :}
+       | RETURN expr:e SEMICOLON
+            {:
+                RESULT = new ReturnStatement(e);
+            :}
+       | WHILE LPAREN expr:condition RPAREN stmt:stmt
+            {:
+                RESULT = new WhileStatement(condition, stmt);
+            :}
+       | var_decl:vd
+            {:
+                RESULT = vd;
+            :}
+       | method_call:mc SEMICOLON
+            {:
+                RESULT = mc;
+            :};
+
+expr ::= expr:e1 PLUS expr:e2
+          {:
+              RESULT = new BinaryExpression(Operator.PLUS, e1, e2);
+          :}
+       | expr:e1 TIMES expr:e2
+          {:
+              RESULT = new BinaryExpression(Operator.TIMES, e1, e2);
+          :}
+       | expr:e1 EQ expr:e2
+          {:
+              RESULT = new BinaryExpression(Operator.EQ, e1, e2);
+          :}
+       | expr:e1 LT expr:e2
+          {:
+              RESULT = new BinaryExpression(Operator.LT, e1, e2);
+          :}
+       | expr:e1 GT expr:e2
+          {:
+              RESULT = new BinaryExpression(Operator.GT, e1, e2);
+          :}
+       | expr:e1 AND expr:e2
+          {:
+              RESULT = new BinaryExpression(Operator.AND, e1, e2);
+          :}
+       | expr:e1 OR expr:e2
+          {:
+              RESULT = new BinaryExpression(Operator.OR, e1, e2);
+          :}
+       | NOT expr:e
+          {:
+              RESULT = new UnaryExpression(Operator.NOT, e);
+          :}
+       | TRUE
+          {:
+              RESULT = new ConstantExpression(true);
+          :}
+       | FALSE
+          {:
+              RESULT = new ConstantExpression(false);
+          :}
+       | INT_CONST:ic
+          {:
+              RESULT = new ConstantExpression(ic);
+          :}
+       | IDENTIFIER:id
+          {:
+              RESULT = new VariableExpression(id);
+          :}
+       | method_call:mc
+          {:
+                RESULT = mc;
+           :}
+       | LPAREN expr:e RPAREN
+          {:
+              RESULT = e;
+          :};
+
+expr_list ::= /* vazio */
+            | expr_list_non_empty:l
+                {:
+                    RESULT = l;
+                :};
+
+expr_list_non_empty ::= expr:e
+                          {:
+                            RESULT = new ArrayList<>();
+                            RESULT.add(e);
+                          :}
+                      | expr_list_non_empty:l COMMA expr:e
+                          {:
+                            l.add(e);
+                            RESULT = l;
+                          :};
