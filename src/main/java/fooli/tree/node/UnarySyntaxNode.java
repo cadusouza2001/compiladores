@@ -15,7 +15,7 @@ public class UnarySyntaxNode implements SyntaxNode {
 
     @Override
     public void process(NodeProcessor processor) {
-        processor.processUnaryExpression(this);
+        processor.processUnarySyntaxNode(this);
     }
 
     public Operator getOperator() {

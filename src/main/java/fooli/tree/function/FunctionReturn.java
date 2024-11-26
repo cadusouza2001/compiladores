@@ -13,7 +13,7 @@ public class FunctionReturn implements Instruction {
 
     @Override
     public void process(NodeProcessor processor) {
-        processor.processReturnStatement(this);
+        processor.processFunctionReturn(this);
     }
 
     public SyntaxNode getExpression() {

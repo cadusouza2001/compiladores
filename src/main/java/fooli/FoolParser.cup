@@ -132,9 +132,9 @@ arg_list_non_empty ::= var_type:t IDENTIFIER:id
 var_type ::= INT   {: RESULT = new IntegerType(); :}
            | BOOL  {: RESULT = new BooleanType(); :};
 
-function_call ::= IDENTIFIER:method_name LPAREN syntax_nodes_list:args RPAREN
+function_call ::= IDENTIFIER:function_name LPAREN syntax_nodes_list:args RPAREN
                 {:
-                    RESULT = new FunctionCall(method_name, args);
+                    RESULT = new FunctionCall(function_name, args);
                 :};
 
 instruction_list ::= /* empty */

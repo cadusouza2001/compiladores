@@ -23,7 +23,7 @@ public class Function implements Node {
 
     @Override
     public void process(NodeProcessor processor) {
-        processor.processMethod(this);
+        processor.processFunction(this);
     }
 
     public Type getReturnType() {

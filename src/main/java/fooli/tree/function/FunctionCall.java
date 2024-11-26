@@ -8,23 +8,23 @@ import fooli.type.Type;
 import fooli.processor.NodeProcessor;
 
 public class FunctionCall implements SyntaxNode, Instruction {
-    private final String methodName;
+    private final String functionName;
     private final List<SyntaxNode> arguments;
     private Type type;
 
-    public FunctionCall(String methodName, List<SyntaxNode> arguments) {
-        this.methodName = methodName;
+    public FunctionCall(String functionName, List<SyntaxNode> arguments) {
+        this.functionName = functionName;
         this.arguments = arguments == null ? List.of() : arguments;
         this.type = null;
     }
 
     @Override
     public void process(NodeProcessor processor) {
-        processor.processMethodCall(this);
+        processor.processFunctionCall(this);
     }
 
-    public String getMethodName() {
-        return methodName;
+    public String getFunctionName() {
+        return functionName;
     }
 
     public List<SyntaxNode> getArguments() {

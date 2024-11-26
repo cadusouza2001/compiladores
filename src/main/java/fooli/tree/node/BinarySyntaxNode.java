@@ -20,7 +20,7 @@ public class BinarySyntaxNode implements SyntaxNode {
 
     @Override
     public void process(NodeProcessor processor) {
-        processor.processBinaryExpression(this);
+        processor.processBinarySyntaxNode(this);
     }
 
     public Operator getOperator() {

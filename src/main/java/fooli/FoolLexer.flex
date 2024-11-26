@@ -45,7 +45,7 @@ import java_cup.runtime.Symbol;
 ";"                 { return new Symbol(sym.SEMICOLON, yytext()); }
 ","                 { return new Symbol(sym.COMMA, yytext()); }
 
-// Identifiers (variables, methods, classes)
+// Identifiers (attributes, functions, classes)
 [a-zA-Z_][a-zA-Z0-9_]* { return new Symbol(sym.IDENTIFIER, yytext()); }
 
 // Numeric constants

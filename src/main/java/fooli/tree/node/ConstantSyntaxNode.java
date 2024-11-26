@@ -21,7 +21,7 @@ public class ConstantSyntaxNode implements SyntaxNode {
 
     @Override
     public void process(NodeProcessor processor) {
-        processor.processConstantExpression(this);
+        processor.processConstantSyntaxNode(this);
     }
 
     public Object getValue() {

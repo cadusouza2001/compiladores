@@ -2,16 +2,16 @@
   Variable(name='num', type=integer)
   Variable(name='count', type=integer)
   Variable(name='isActive', type=boolean)
-  Method(name='add', return=integer, params=(integer a, integer b))
+  Function(name='add', return=integer, args=(integer a, integer b))
     Variable(name='a', type=integer)
     Variable(name='b', type=integer)
-  Method(name='multiply', return=integer, params=(integer a, integer b))
+  Function(name='multiply', return=integer, args=(integer a, integer b))
     Variable(name='a', type=integer)
     Variable(name='b', type=integer)
-  Method(name='toggleActivity', return=void, params=())
-  Method(name='resetCount', return=void, params=())
-  Method(name='incrementCount', return=integer, params=())
-  Method(name='main', return=void, params=())
+  Function(name='toggleActivity', return=void, args=())
+  Function(name='resetCount', return=void, args=())
+  Function(name='incrementCount', return=integer, args=())
+  Function(name='main', return=void, args=())
 
 
 === Intermediate Code ===

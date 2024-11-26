@@ -19,7 +19,7 @@ public class SemanticAnalyzer implements NodeProcessor {
     private Scope globalScope;
     private Scope currentScope;
     private List<String> errors;
-    private Type currentMethodReturnType;
+    private Type currentFunctionReturnType;
 
     public SemanticAnalyzer() {
         this.globalScope = new Scope();
@@ -54,7 +54,7 @@ public class SemanticAnalyzer implements NodeProcessor {
     @Override
     public void processClassDescriptor(ClassDescriptor node) {
         node.getAttributes().forEach(field -> field.process(this));
-        node.getFunctions().forEach(method -> method.process(this));
+        node.getFunctions().forEach(function -> function.process(this));
     }
 
     @Override
@@ -63,18 +63,18 @@ public class SemanticAnalyzer implements NodeProcessor {
     }
 
     @Override
-    public void processMethod(Function node) {
-        declareMethod(node);
+    public void processFunction(Function node) {
+        declareFunction(node);
         enterScope(currentScope.createChildScope());
-        currentMethodReturnType = node.getReturnType();
+        currentFunctionReturnType = node.getReturnType();
         node.getParameters().forEach(param -> declareVariable(param.getAttributeName(), param.getAttributeType()));
         node.getBody().forEach(stmt -> stmt.process(this));
         exitScope();
-        currentMethodReturnType = null;
+        currentFunctionReturnType = null;
     }
 
     @Override
-    public void processAssignmentStatement(AssignmentInstruction node) {
+    public void processAssignmentInstruction(AssignmentInstruction node) {
         Descriptor varSymbol = currentScope.lookup(node.getIdentifier());
         if (varSymbol == null) {
             reportError("Variable '" + node.getIdentifier() + "' not declared.");
@@ -92,57 +92,57 @@ public class SemanticAnalyzer implements NodeProcessor {
     }
 
     @Override
-    public void processIfStatement(SimpleConditionalInstruction node) {
+    public void processSimpleConditionalInstruction(SimpleConditionalInstruction node) {
         validateCondition(node.getCondition());
         node.getInstruction().process(this);
     }
 
     @Override
-    public void processIfElseStatement(ConditionalInstruction node) {
+    public void processConditionalInstruction(ConditionalInstruction node) {
         validateCondition(node.getCondition());
         node.getThenBranch().process(this);
         node.getElseBranch().process(this);
     }
 
     @Override
-    public void processWhileStatement(LoopInstruction node) {
+    public void processLoopInstruction(LoopInstruction node) {
         validateCondition(node.getCondition());
         node.getBody().process(this);
     }
 
     @Override
-    public void processReturnStatement(FunctionReturn node) {
-        if (currentMethodReturnType == null) {
-            reportError("Return statement outside of a method.");
+    public void processFunctionReturn(FunctionReturn node) {
+        if (currentFunctionReturnType == null) {
+            reportError("Return statement outside of a function.");
             return;
         }
         node.getExpression().process(this);
         Type exprType = node.getExpression().getType();
-        if (!currentMethodReturnType.isAssignableFrom(exprType)) {
-            reportError("Type mismatch in return statement. Expected " + currentMethodReturnType + ", found " + exprType + ".");
+        if (!currentFunctionReturnType.isAssignableFrom(exprType)) {
+            reportError("Type mismatch in return statement. Expected " + currentFunctionReturnType + ", found " + exprType + ".");
         }
     }
 
     @Override
-    public void processMethodCall(FunctionCall node) {
-        Descriptor methodSymbol = currentScope.lookup(node.getMethodName());
-        if (methodSymbol == null) {
-            reportError("Method '" + node.getMethodName() + "' not declared.");
+    public void processFunctionCall(FunctionCall node) {
+        Descriptor descriptor = currentScope.lookup(node.getFunctionName());
+        if (descriptor == null) {
+            reportError("Function '" + node.getFunctionName() + "' not declared.");
             node.setType(new InvalidType());
             return;
         }
-        if (!(methodSymbol instanceof MethodDescriptor)) {
-            reportError("Symbol '" + node.getMethodName() + "' is not a method.");
+        if (!(descriptor instanceof FunctionDescriptor)) {
+            reportError("Symbol '" + node.getFunctionName() + "' is not a function.");
             node.setType(new InvalidType());
             return;
         }
-        MethodDescriptor method = (MethodDescriptor) methodSymbol;
-        validateMethodCallArguments(node, method);
-        node.setType(method.getType());
+        FunctionDescriptor functionDescriptor = (FunctionDescriptor) descriptor;
+        validateFunctionCallArguments(node, functionDescriptor);
+        node.setType(functionDescriptor.getType());
     }
 
     @Override
-    public void processConstantExpression(ConstantSyntaxNode node) {
+    public void processConstantSyntaxNode(ConstantSyntaxNode node) {
         Object value = node.getValue();
         if (value instanceof Integer) {
             node.setType(new IntegerType());
@@ -155,7 +155,7 @@ public class SemanticAnalyzer implements NodeProcessor {
     }
 
     @Override
-    public void processVariableExpression(VariableSyntaxNode node) {
+    public void processVariableSyntaxNode(VariableSyntaxNode node) {
         Descriptor varSymbol = currentScope.lookup(node.getName());
         if (varSymbol == null) {
             reportError("Variable '" + node.getName() + "' not declared.");
@@ -171,7 +171,7 @@ public class SemanticAnalyzer implements NodeProcessor {
     }
 
     @Override
-    public void processUnaryExpression(UnarySyntaxNode node) {
+    public void processUnarySyntaxNode(UnarySyntaxNode node) {
         node.getExpression().process(this);
         Type exprType = node.getExpression().getType();
         if (node.getOperator() == Operator.NOT) {
@@ -186,7 +186,7 @@ public class SemanticAnalyzer implements NodeProcessor {
     }
 
     @Override
-    public void processBinaryExpression(BinarySyntaxNode node) {
+    public void processBinarySyntaxNode(BinarySyntaxNode node) {
         node.getLeft().process(this);
         node.getRight().process(this);
         Type leftType = node.getLeft().getType();
@@ -226,15 +226,15 @@ public class SemanticAnalyzer implements NodeProcessor {
         }
     }
 
-    private void declareMethod(Function node) {
-        List<ParameterDescriptor> params = node.getParameters().stream()
-                .map(param -> new ParameterDescriptor(param.getAttributeName(), param.getAttributeType()))
+    private void declareFunction(Function node) {
+        List<ArgumentDescriptor> params = node.getParameters().stream()
+                .map(param -> new ArgumentDescriptor(param.getAttributeName(), param.getAttributeType()))
                 .toList();
-        MethodDescriptor methodSymbol = new MethodDescriptor(node.getFunctionName(), node.getReturnType(), params);
+        FunctionDescriptor functionDescriptor = new FunctionDescriptor(node.getFunctionName(), node.getReturnType(), params);
         try {
-            currentScope.declare(methodSymbol);
+            currentScope.declare(functionDescriptor);
         } catch (SemanticException e) {
-            reportError("Method " + node.getFunctionName() + ": " + e.getMessage());
+            reportError("Function " + node.getFunctionName() + ": " + e.getMessage());
         }
     }
 
@@ -245,18 +245,18 @@ public class SemanticAnalyzer implements NodeProcessor {
         }
     }
 
-    private void validateMethodCallArguments(FunctionCall node, MethodDescriptor method) {
-        List<ParameterDescriptor> parameters = method.getParameters();
+    private void validateFunctionCallArguments(FunctionCall node, FunctionDescriptor function) {
+        List<ArgumentDescriptor> parameters = function.getArguments();
         List<SyntaxNode> arguments = node.getArguments();
         if (parameters.size() != arguments.size()) {
-            reportError("Method '" + node.getMethodName() + "' expects " + parameters.size() + " arguments, but got " + arguments.size() + ".");
+            reportError("Function '" + node.getFunctionName() + "' expects " + parameters.size() + " arguments, but got " + arguments.size() + ".");
         } else {
             for (int i = 0; i < parameters.size(); i++) {
                 arguments.get(i).process(this);
                 Type argType = arguments.get(i).getType();
                 Type paramType = parameters.get(i).getType();
                 if (!paramType.isAssignableFrom(argType)) {
-                    reportError("Argument " + (i + 1) + " of method '" + node.getMethodName() + "' expects type " + paramType + ", but got " + argType + ".");
+                    reportError("Argument " + (i + 1) + " of function '" + node.getFunctionName() + "' expects type " + paramType + ", but got " + argType + ".");
                 }
             }
         }

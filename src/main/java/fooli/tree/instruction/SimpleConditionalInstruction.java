@@ -14,7 +14,7 @@ public class SimpleConditionalInstruction implements Instruction {
 
     @Override
     public void process(NodeProcessor processor) {
-        processor.processIfStatement(this);
+        processor.processSimpleConditionalInstruction(this);
     }
 
     public SyntaxNode getCondition() {

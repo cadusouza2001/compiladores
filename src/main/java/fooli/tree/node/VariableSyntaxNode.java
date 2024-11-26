@@ -9,7 +9,7 @@ public class VariableSyntaxNode implements SyntaxNode {
 
     @Override
     public void process(NodeProcessor processor) {
-        processor.processVariableExpression(this);
+        processor.processVariableSyntaxNode(this);
     }
 
     public VariableSyntaxNode(String name) {

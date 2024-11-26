@@ -16,15 +16,15 @@ import fooli.tree.instruction.LoopInstruction;
 public interface NodeProcessor {
     void processClassDescriptor(ClassDescriptor node);
     void processAttributeDescriptor(AttributeDescriptor node);
-    void processMethod(Function node);
-    void processAssignmentStatement(AssignmentInstruction node);
-    void processIfStatement(SimpleConditionalInstruction node);
-    void processIfElseStatement(ConditionalInstruction node);
-    void processWhileStatement(LoopInstruction node);
-    void processReturnStatement(FunctionReturn node);
-    void processMethodCall(FunctionCall node);
-    void processConstantExpression(ConstantSyntaxNode node);
-    void processVariableExpression(VariableSyntaxNode node);
-    void processUnaryExpression(UnarySyntaxNode node);
-    void processBinaryExpression(BinarySyntaxNode node);
+    void processFunction(Function node);
+    void processAssignmentInstruction(AssignmentInstruction node);
+    void processSimpleConditionalInstruction(SimpleConditionalInstruction node);
+    void processConditionalInstruction(ConditionalInstruction node);
+    void processLoopInstruction(LoopInstruction node);
+    void processFunctionReturn(FunctionReturn node);
+    void processFunctionCall(FunctionCall node);
+    void processConstantSyntaxNode(ConstantSyntaxNode node);
+    void processVariableSyntaxNode(VariableSyntaxNode node);
+    void processUnarySyntaxNode(UnarySyntaxNode node);
+    void processBinarySyntaxNode(BinarySyntaxNode node);
 }

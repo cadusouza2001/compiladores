@@ -14,7 +14,7 @@ public class AssignmentInstruction implements Instruction {
 
     @Override
     public void process(NodeProcessor processor) {
-        processor.processAssignmentStatement(this);
+        processor.processAssignmentInstruction(this);
     }
 
     public String getIdentifier() {

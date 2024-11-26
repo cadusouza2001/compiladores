@@ -14,7 +14,7 @@ public class LoopInstruction implements Instruction {
 
     @Override
     public void process(NodeProcessor processor) {
-        processor.processWhileStatement(this);
+        processor.processLoopInstruction(this);
     }
 
     public SyntaxNode getCondition() {

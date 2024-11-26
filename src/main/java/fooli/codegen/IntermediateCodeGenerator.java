@@ -30,7 +30,7 @@ public class IntermediateCodeGenerator implements NodeProcessor {
 
     @Override
     public void processClassDescriptor(ClassDescriptor classDecl) {
-        classDecl.getFunctions().forEach(method -> method.process(this));
+        classDecl.getFunctions().forEach(function -> function.process(this));
         generateLabels();
     }
 
@@ -40,27 +40,27 @@ public class IntermediateCodeGenerator implements NodeProcessor {
     }
 
     @Override
-    public void processMethod(Function function) {
+    public void processFunction(Function function) {
         appendCode("\n" + function.getFunctionName() + ":");
         function.getParameters().forEach(arg -> appendCode("param " + arg.getAttributeName()));
         function.getBody().forEach(stmt -> stmt.process(this));
     }
 
     @Override
-    public void processAssignmentStatement(AssignmentInstruction assignStmt) {
+    public void processAssignmentInstruction(AssignmentInstruction assignStmt) {
         assignStmt.getAssignment().process(this);
         appendCode(String.format("%s = %s", assignStmt.getIdentifier(), context.getTemporaryForNode(assignStmt.getAssignment())));
     }
 
     @Override
-    public void processIfStatement(SimpleConditionalInstruction ifStmt) {
+    public void processSimpleConditionalInstruction(SimpleConditionalInstruction ifStmt) {
         ifStmt.getCondition().process(this);
         String thenLabel = context.createLabelForSubtree(ifStmt.getInstruction(), "then");
         appendCode(String.format("ifTrue %s goto %s", context.getTemporaryForNode(ifStmt.getCondition()), thenLabel));
     }
 
     @Override
-    public void processIfElseStatement(ConditionalInstruction ifElseStmt) {
+    public void processConditionalInstruction(ConditionalInstruction ifElseStmt) {
         ifElseStmt.getCondition().process(this);
         String thenLabel = context.createLabelForSubtree(ifElseStmt.getThenBranch(), "then");
         String elseLabel = context.createLabelForSubtree(ifElseStmt.getElseBranch(), "else");
@@ -69,42 +69,42 @@ public class IntermediateCodeGenerator implements NodeProcessor {
     }
 
     @Override
-    public void processWhileStatement(LoopInstruction whileStmt) {
+    public void processLoopInstruction(LoopInstruction whileStmt) {
         whileStmt.getCondition().process(this);
         String bodyLabel = context.createLabelForSubtree(whileStmt.getBody(), "body");
         appendCode(String.format("while %s goto %s", context.getTemporaryForNode(whileStmt.getCondition()), bodyLabel));
     }
 
     @Override
-    public void processReturnStatement(FunctionReturn returnStmt) {
+    public void processFunctionReturn(FunctionReturn returnStmt) {
         returnStmt.getExpression().process(this);
         appendCode(String.format("return %s", context.getTemporaryForNode(returnStmt.getExpression())));
     }
 
     @Override
-    public void processMethodCall(FunctionCall functionCall) {
+    public void processFunctionCall(FunctionCall functionCall) {
         functionCall.getArguments().forEach(arg -> arg.process(this));
-        appendCode(String.format("%s = call %s", context.getTemporaryForNode(functionCall), functionCall.getMethodName()));
+        appendCode(String.format("%s = call %s", context.getTemporaryForNode(functionCall), functionCall.getFunctionName()));
     }
 
     @Override
-    public void processConstantExpression(ConstantSyntaxNode constExpr) {
+    public void processConstantSyntaxNode(ConstantSyntaxNode constExpr) {
         // No code generation needed for constant expressions
     }
 
     @Override
-    public void processVariableExpression(VariableSyntaxNode varExpr) {
+    public void processVariableSyntaxNode(VariableSyntaxNode varExpr) {
         // No code generation needed for variable expressions
     }
 
     @Override
-    public void processUnaryExpression(UnarySyntaxNode unaryExpr) {
+    public void processUnarySyntaxNode(UnarySyntaxNode unaryExpr) {
         unaryExpr.getExpression().process(this);
         appendCode(String.format("%s = %s %s", context.getTemporaryForNode(unaryExpr), unaryExpr.getOperator(), context.getTemporaryForNode(unaryExpr.getExpression())));
     }
 
     @Override
-    public void processBinaryExpression(BinarySyntaxNode binaryExpr) {
+    public void processBinarySyntaxNode(BinarySyntaxNode binaryExpr) {
         binaryExpr.getLeft().process(this);
         binaryExpr.getRight().process(this);
         appendCode(String.format("%s = %s %s %s", context.getTemporaryForNode(binaryExpr), context.getTemporaryForNode(binaryExpr.getLeft()), binaryExpr.getOperator(), context.getTemporaryForNode(binaryExpr.getRight())));
