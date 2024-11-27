@@ -1,7 +1,6 @@
 package fooli.codegen;
 
 import java.util.Map;
-
 import fooli.tree.node.Node;
 import fooli.tree.descriptor.ClassDescriptor;
 import fooli.tree.descriptor.AttributeDescriptor;
@@ -23,9 +22,45 @@ public class IntermediateCodeGenerator implements NodeProcessor {
         this.context = new CodeGenerationContext();
         this.codeBuilder = new StringBuilder();
     }
+    @Override
+    public void processVariableSyntaxNode(VariableSyntaxNode varExpr) {
+        // No code generation needed for variable expressions
+    }
 
-    public String getCode() {
-        return codeBuilder.toString();
+    @Override
+    public void processBinarySyntaxNode(BinarySyntaxNode binaryExpr) {
+        binaryExpr.getLeft().process(this);
+        binaryExpr.getRight().process(this);
+        appendCode(String.format("%s = %s %s %s", context.getTemporaryForNode(binaryExpr), context.getTemporaryForNode(binaryExpr.getLeft()), binaryExpr.getOperator(), context.getTemporaryForNode(binaryExpr.getRight())));
+    }
+
+    @Override
+    public void processUnarySyntaxNode(UnarySyntaxNode unaryExpr) {
+        unaryExpr.getExpression().process(this);
+        appendCode(String.format("%s = %s %s", context.getTemporaryForNode(unaryExpr), unaryExpr.getOperator(), context.getTemporaryForNode(unaryExpr.getExpression())));
+    }
+
+    @Override
+    public void processFunctionCall(FunctionCall functionCall) {
+        functionCall.getArguments().forEach(arg -> arg.process(this));
+        appendCode(String.format("%s = call %s", context.getTemporaryForNode(functionCall), functionCall.getFunctionName()));
+    }
+
+    @Override
+    public void processFunctionReturn(FunctionReturn returnStmt) {
+        returnStmt.getExpression().process(this);
+        appendCode(String.format("return %s", context.getTemporaryForNode(returnStmt.getExpression())));
+    }
+
+    @Override
+    public void processAssignmentInstruction(AssignmentInstruction assignStmt) {
+        assignStmt.getAssignment().process(this);
+        appendCode(String.format("%s = %s", assignStmt.getIdentifier(), context.getTemporaryForNode(assignStmt.getAssignment())));
+    }
+
+    @Override
+    public void processConstantSyntaxNode(ConstantSyntaxNode constExpr) {
+        // No code generation needed for constant expressions
     }
 
     @Override
@@ -35,8 +70,10 @@ public class IntermediateCodeGenerator implements NodeProcessor {
     }
 
     @Override
-    public void processAttributeDescriptor(AttributeDescriptor varDecl) {
-        // No code generation needed for variable declarations
+    public void processLoopInstruction(LoopInstruction whileStmt) {
+        whileStmt.getCondition().process(this);
+        String bodyLabel = context.createLabelForSubtree(whileStmt.getBody(), "body");
+        appendCode(String.format("while %s goto %s", context.getTemporaryForNode(whileStmt.getCondition()), bodyLabel));
     }
 
     @Override
@@ -47,16 +84,19 @@ public class IntermediateCodeGenerator implements NodeProcessor {
     }
 
     @Override
-    public void processAssignmentInstruction(AssignmentInstruction assignStmt) {
-        assignStmt.getAssignment().process(this);
-        appendCode(String.format("%s = %s", assignStmt.getIdentifier(), context.getTemporaryForNode(assignStmt.getAssignment())));
-    }
-
-    @Override
     public void processSimpleConditionalInstruction(SimpleConditionalInstruction ifStmt) {
         ifStmt.getCondition().process(this);
         String thenLabel = context.createLabelForSubtree(ifStmt.getInstruction(), "then");
         appendCode(String.format("ifTrue %s goto %s", context.getTemporaryForNode(ifStmt.getCondition()), thenLabel));
+    }
+
+    @Override
+    public void processAttributeDescriptor(AttributeDescriptor varDecl) {
+        // No code generation needed for variable declarations
+    }
+
+    private void appendCode(String code) {
+        codeBuilder.append(code).append("\n");
     }
 
     @Override
@@ -68,56 +108,14 @@ public class IntermediateCodeGenerator implements NodeProcessor {
         appendCode(String.format("ifFalse %s goto %s", context.getTemporaryForNode(ifElseStmt.getCondition()), elseLabel));
     }
 
-    @Override
-    public void processLoopInstruction(LoopInstruction whileStmt) {
-        whileStmt.getCondition().process(this);
-        String bodyLabel = context.createLabelForSubtree(whileStmt.getBody(), "body");
-        appendCode(String.format("while %s goto %s", context.getTemporaryForNode(whileStmt.getCondition()), bodyLabel));
-    }
-
-    @Override
-    public void processFunctionReturn(FunctionReturn returnStmt) {
-        returnStmt.getExpression().process(this);
-        appendCode(String.format("return %s", context.getTemporaryForNode(returnStmt.getExpression())));
-    }
-
-    @Override
-    public void processFunctionCall(FunctionCall functionCall) {
-        functionCall.getArguments().forEach(arg -> arg.process(this));
-        appendCode(String.format("%s = call %s", context.getTemporaryForNode(functionCall), functionCall.getFunctionName()));
-    }
-
-    @Override
-    public void processConstantSyntaxNode(ConstantSyntaxNode constExpr) {
-        // No code generation needed for constant expressions
-    }
-
-    @Override
-    public void processVariableSyntaxNode(VariableSyntaxNode varExpr) {
-        // No code generation needed for variable expressions
-    }
-
-    @Override
-    public void processUnarySyntaxNode(UnarySyntaxNode unaryExpr) {
-        unaryExpr.getExpression().process(this);
-        appendCode(String.format("%s = %s %s", context.getTemporaryForNode(unaryExpr), unaryExpr.getOperator(), context.getTemporaryForNode(unaryExpr.getExpression())));
-    }
-
-    @Override
-    public void processBinarySyntaxNode(BinarySyntaxNode binaryExpr) {
-        binaryExpr.getLeft().process(this);
-        binaryExpr.getRight().process(this);
-        appendCode(String.format("%s = %s %s %s", context.getTemporaryForNode(binaryExpr), context.getTemporaryForNode(binaryExpr.getLeft()), binaryExpr.getOperator(), context.getTemporaryForNode(binaryExpr.getRight())));
-    }
-
-    private void appendCode(String code) {
-        codeBuilder.append(code).append("\n");
-    }
-
     private void generateLabels() {
         for (Map.Entry<String, Node> entry : context.getLabelNodeMap().entrySet()) {
             appendCode("\n" + entry.getKey() + ":");
             entry.getValue().process(this);
         }
+    }
+
+    public String getCode() {
+        return codeBuilder.toString();
     }
 }

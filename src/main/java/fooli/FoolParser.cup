@@ -37,12 +37,11 @@ terminal Boolean TRUE, FALSE;
 terminal Integer INT_CONST;
 
 non terminal ClassDescriptor class_decl;
-non terminal List decl_list;
-non terminal Node declaration;
-non terminal AttributeDescriptor var_decl;
+non terminal AttributeDescriptor att_decl;
 non terminal Function function_decl;
+non terminal List decl_list;
 non terminal FunctionCall function_call;
-non terminal Type var_type;
+non terminal Type type;
 non terminal Instruction instruction;
 non terminal List<Instruction> instruction_list;
 non terminal SyntaxNode syntax_node;
@@ -50,6 +49,7 @@ non terminal List<SyntaxNode> syntax_nodes_list;
 non terminal List<SyntaxNode> syntax_nodes_list_not_empty;
 non terminal List<AttributeDescriptor> arg_list;
 non terminal List<AttributeDescriptor> arg_list_non_empty;
+non terminal Node declaration;
 
 precedence left ELSE;
 precedence nonassoc IF;
@@ -63,45 +63,15 @@ precedence right NOT;
 
 start with class_decl;
 
-class_decl ::= LBRACE CLASS IDENTIFIER:name decl_list:dl RBRACE
+type ::= INT   {: RESULT = new IntegerType(); :}
+           | BOOL  {: RESULT = new BooleanType(); :};
+
+function_call ::= IDENTIFIER:function_name LPAREN syntax_nodes_list:args RPAREN
                 {:
-                    List<AttributeDescriptor> fields = new ArrayList<>();
-                    List<Function> functions = new ArrayList<>();
-                    for (var decl : dl) {
-                        if (decl instanceof AttributeDescriptor) {
-                            fields.add((AttributeDescriptor) decl);
-                        } else {
-                            functions.add((Function) decl);
-                        }
-                    }
-                    RESULT = new ClassDescriptor(name, fields, functions);
+                    RESULT = new FunctionCall(function_name, args);
                 :};
 
-decl_list ::= /* empty */
-                {:
-                    RESULT = new ArrayList<>();
-                :}
-            | decl_list:l declaration:d
-                {:
-                    l.add(d);
-                    RESULT = l;
-                :};
-
-declaration ::= var_decl:vd
-                {:
-                    RESULT = vd;
-                :}
-              | function_decl:md
-                {:
-                    RESULT = md;
-                :};
-
-var_decl ::= var_type:vt IDENTIFIER:var_name SEMICOLON
-                {:
-                    RESULT = new AttributeDescriptor(vt, var_name);
-                :};
-
-function_decl ::= var_type:rt IDENTIFIER:id LPAREN arg_list:args RPAREN LBRACE instruction_list:sl RBRACE
+function_decl ::= type:rt IDENTIFIER:id LPAREN arg_list:args RPAREN LBRACE instruction_list:sl RBRACE
                 {:
                     Function function = new Function(rt, id, args, sl);
                     RESULT = function;
@@ -112,29 +82,23 @@ function_decl ::= var_type:rt IDENTIFIER:id LPAREN arg_list:args RPAREN LBRACE i
                     RESULT = function;
                 :};
 
-arg_list ::= /* empty */
-           | arg_list_non_empty:l
+declaration ::= att_decl:vd
                 {:
-                    RESULT = l;
+                    RESULT = vd;
+                :}
+              | function_decl:md
+                {:
+                    RESULT = md;
                 :};
 
-arg_list_non_empty ::= var_type:t IDENTIFIER:id
-                        {:
-                            RESULT = new ArrayList<>();
-                            RESULT.add(new AttributeDescriptor(t, id));
-                        :}
-                     | arg_list_non_empty:l COMMA var_type:t IDENTIFIER:id
-                        {:
-                            l.add(new AttributeDescriptor(t, id));
-                            RESULT = l;
-                        :};
-
-var_type ::= INT   {: RESULT = new IntegerType(); :}
-           | BOOL  {: RESULT = new BooleanType(); :};
-
-function_call ::= IDENTIFIER:function_name LPAREN syntax_nodes_list:args RPAREN
+decl_list ::= /* empty */
                 {:
-                    RESULT = new FunctionCall(function_name, args);
+                    RESULT = new ArrayList<>();
+                :}
+            | decl_list:l declaration:d
+                {:
+                    l.add(d);
+                    RESULT = l;
                 :};
 
 instruction_list ::= /* empty */
@@ -167,7 +131,7 @@ instruction ::= IDENTIFIER:id ASSIGN syntax_node:e SEMICOLON
             {:
                 RESULT = new LoopInstruction(condition, stmt);
             :}
-       | var_decl:vd
+       | att_decl:vd
             {:
                 RESULT = vd;
             :}
@@ -175,6 +139,44 @@ instruction ::= IDENTIFIER:id ASSIGN syntax_node:e SEMICOLON
             {:
                 RESULT = mc;
             :};
+
+
+arg_list ::= /* empty */
+           | arg_list_non_empty:l
+                {:
+                    RESULT = l;
+                :};
+
+syntax_nodes_list ::= /* empty */
+            | syntax_nodes_list_not_empty:l
+                {:
+                    RESULT = l;
+                :};
+
+syntax_nodes_list_not_empty ::= syntax_node:e
+                          {:
+                            RESULT = new ArrayList<>();
+                            RESULT.add(e);
+                          :}
+                      | syntax_nodes_list_not_empty:l COMMA syntax_node:e
+                          {:
+                            l.add(e);
+                            RESULT = l;
+                          :};
+
+class_decl ::= LBRACE CLASS IDENTIFIER:name decl_list:dl RBRACE
+                {:
+                    List<AttributeDescriptor> fields = new ArrayList<>();
+                    List<Function> functions = new ArrayList<>();
+                    for (var decl : dl) {
+                        if (decl instanceof AttributeDescriptor) {
+                            fields.add((AttributeDescriptor) decl);
+                        } else {
+                            functions.add((Function) decl);
+                        }
+                    }
+                    RESULT = new ClassDescriptor(name, fields, functions);
+                :};
 
 syntax_node ::= syntax_node:e1 PLUS syntax_node:e2
           {:
@@ -233,19 +235,18 @@ syntax_node ::= syntax_node:e1 PLUS syntax_node:e2
               RESULT = e;
           :};
 
-syntax_nodes_list ::= /* empty */
-            | syntax_nodes_list_not_empty:l
-                {:
-                    RESULT = l;
-                :};
-
-syntax_nodes_list_not_empty ::= syntax_node:e
-                          {:
+arg_list_non_empty ::= type:t IDENTIFIER:id
+                        {:
                             RESULT = new ArrayList<>();
-                            RESULT.add(e);
-                          :}
-                      | syntax_nodes_list_not_empty:l COMMA syntax_node:e
-                          {:
-                            l.add(e);
+                            RESULT.add(new AttributeDescriptor(t, id));
+                        :}
+                     | arg_list_non_empty:l COMMA type:t IDENTIFIER:id
+                        {:
+                            l.add(new AttributeDescriptor(t, id));
                             RESULT = l;
-                          :};
+                        :};
+
+att_decl ::= type:vt IDENTIFIER:var_name SEMICOLON
+                {:
+                    RESULT = new AttributeDescriptor(vt, var_name);
+                :};
