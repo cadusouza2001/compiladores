@@ -1,0 +1,251 @@
+package fooli;
+
+/* Arquivo: FoolParser.cup */
+/*
+ * Carlos Souza e Murilo Schuck
+ * Compiladores - Trabalho GB
+ */
+
+import java_cup.runtime.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import fooli.tree.*;
+import fooli.tree.descriptor.*;
+import fooli.tree.node.*;
+import fooli.tree.function.*;
+import fooli.tree.instruction.*;
+import fooli.type.*;
+
+parser code {:
+    public void report_error(String message, Object info) {
+        Symbol operator = (Symbol) info;
+        String error = "Unexpected token '" + operator.value + "' found.";
+        System.err.println(error);
+        super.report_error(message, info);
+    }
+
+    public void report_fatal_error(String message, Object info) {
+        report_error(message, info);
+        throw new RuntimeException("Fatal syntax error. Parsing aborted.");
+    }
+:}
+
+terminal CLASS, VOID, INT, BOOL, IF, ELSE, RETURN, EQ, LT, GT, PLUS, TIMES, ASSIGN, NOT, AND, OR, LPAREN, RPAREN, LBRACE, RBRACE, SEMICOLON, COMMA, WHILE;
+terminal String IDENTIFIER;
+terminal Boolean TRUE, FALSE;
+terminal Integer INT_CONST;
+
+non terminal ClassDescriptor class_decl;
+non terminal List decl_list;
+non terminal Node declaration;
+non terminal AttributeDescriptor var_decl;
+non terminal Function function_decl;
+non terminal FunctionCall function_call;
+non terminal Type var_type;
+non terminal Instruction instruction;
+non terminal List<Instruction> instruction_list;
+non terminal SyntaxNode syntax_node;
+non terminal List<SyntaxNode> syntax_nodes_list;
+non terminal List<SyntaxNode> syntax_nodes_list_not_empty;
+non terminal List<AttributeDescriptor> arg_list;
+non terminal List<AttributeDescriptor> arg_list_non_empty;
+
+precedence left ELSE;
+precedence nonassoc IF;
+precedence left OR;
+precedence left AND;
+precedence left EQ;
+precedence left LT, GT;
+precedence left PLUS;
+precedence left TIMES;
+precedence right NOT;
+
+start with class_decl;
+
+class_decl ::= LBRACE CLASS IDENTIFIER:name decl_list:dl RBRACE
+                {:
+                    List<AttributeDescriptor> fields = new ArrayList<>();
+                    List<Function> functions = new ArrayList<>();
+                    for (var decl : dl) {
+                        if (decl instanceof AttributeDescriptor) {
+                            fields.add((AttributeDescriptor) decl);
+                        } else {
+                            functions.add((Function) decl);
+                        }
+                    }
+                    RESULT = new ClassDescriptor(name, fields, functions);
+                :};
+
+decl_list ::= /* empty */
+                {:
+                    RESULT = new ArrayList<>();
+                :}
+            | decl_list:l declaration:d
+                {:
+                    l.add(d);
+                    RESULT = l;
+                :};
+
+declaration ::= var_decl:vd
+                {:
+                    RESULT = vd;
+                :}
+              | function_decl:md
+                {:
+                    RESULT = md;
+                :};
+
+var_decl ::= var_type:vt IDENTIFIER:var_name SEMICOLON
+                {:
+                    RESULT = new AttributeDescriptor(vt, var_name);
+                :};
+
+function_decl ::= var_type:rt IDENTIFIER:id LPAREN arg_list:args RPAREN LBRACE instruction_list:sl RBRACE
+                {:
+                    Function function = new Function(rt, id, args, sl);
+                    RESULT = function;
+                :}
+            | VOID IDENTIFIER:id LPAREN arg_list:args RPAREN LBRACE instruction_list:sl RBRACE
+                {:
+                    Function function = new Function(new VoidType(), id, args, sl);
+                    RESULT = function;
+                :};
+
+arg_list ::= /* empty */
+           | arg_list_non_empty:l
+                {:
+                    RESULT = l;
+                :};
+
+arg_list_non_empty ::= var_type:t IDENTIFIER:id
+                        {:
+                            RESULT = new ArrayList<>();
+                            RESULT.add(new AttributeDescriptor(t, id));
+                        :}
+                     | arg_list_non_empty:l COMMA var_type:t IDENTIFIER:id
+                        {:
+                            l.add(new AttributeDescriptor(t, id));
+                            RESULT = l;
+                        :};
+
+var_type ::= INT   {: RESULT = new IntegerType(); :}
+           | BOOL  {: RESULT = new BooleanType(); :};
+
+function_call ::= IDENTIFIER:function_name LPAREN syntax_nodes_list:args RPAREN
+                {:
+                    RESULT = new FunctionCall(function_name, args);
+                :};
+
+instruction_list ::= /* empty */
+                {:
+                    RESULT = new ArrayList<>();
+                :}
+            | instruction_list:l instruction:s
+                {:
+                    l.add(s);
+                    RESULT = l;
+                :};
+
+instruction ::= IDENTIFIER:id ASSIGN syntax_node:e SEMICOLON
+            {:
+                RESULT = new AssignmentInstruction(id, e);
+            :}
+       | IF LPAREN syntax_node:condition RPAREN instruction:then
+            {:
+                RESULT = new SimpleConditionalInstruction(condition, then);
+            :}
+       | IF LPAREN syntax_node:condition RPAREN instruction:then ELSE instruction:otherwise
+            {:
+                RESULT = new ConditionalInstruction(condition, then, otherwise);
+            :}
+       | RETURN syntax_node:e SEMICOLON
+            {:
+                RESULT = new FunctionReturn(e);
+            :}
+       | WHILE LPAREN syntax_node:condition RPAREN instruction:stmt
+            {:
+                RESULT = new LoopInstruction(condition, stmt);
+            :}
+       | var_decl:vd
+            {:
+                RESULT = vd;
+            :}
+       | function_call:mc SEMICOLON
+            {:
+                RESULT = mc;
+            :};
+
+syntax_node ::= syntax_node:e1 PLUS syntax_node:e2
+          {:
+              RESULT = new BinarySyntaxNode(Operator.PLUS, e1, e2);
+          :}
+       | syntax_node:e1 TIMES syntax_node:e2
+          {:
+              RESULT = new BinarySyntaxNode(Operator.TIMES, e1, e2);
+          :}
+       | syntax_node:e1 EQ syntax_node:e2
+          {:
+              RESULT = new BinarySyntaxNode(Operator.EQ, e1, e2);
+          :}
+       | syntax_node:e1 LT syntax_node:e2
+          {:
+              RESULT = new BinarySyntaxNode(Operator.LT, e1, e2);
+          :}
+       | syntax_node:e1 GT syntax_node:e2
+          {:
+              RESULT = new BinarySyntaxNode(Operator.GT, e1, e2);
+          :}
+       | syntax_node:e1 AND syntax_node:e2
+          {:
+              RESULT = new BinarySyntaxNode(Operator.AND, e1, e2);
+          :}
+       | syntax_node:e1 OR syntax_node:e2
+          {:
+              RESULT = new BinarySyntaxNode(Operator.OR, e1, e2);
+          :}
+       | NOT syntax_node:e
+          {:
+              RESULT = new UnarySyntaxNode(Operator.NOT, e);
+          :}
+       | TRUE
+          {:
+              RESULT = new ConstantSyntaxNode(true);
+          :}
+       | FALSE
+          {:
+              RESULT = new ConstantSyntaxNode(false);
+          :}
+       | INT_CONST:ic
+          {:
+              RESULT = new ConstantSyntaxNode(ic);
+          :}
+       | IDENTIFIER:id
+          {:
+              RESULT = new VariableSyntaxNode(id);
+          :}
+       | function_call:mc
+          {:
+                RESULT = mc;
+           :}
+       | LPAREN syntax_node:e RPAREN
+          {:
+              RESULT = e;
+          :};
+
+syntax_nodes_list ::= /* empty */
+            | syntax_nodes_list_not_empty:l
+                {:
+                    RESULT = l;
+                :};
+
+syntax_nodes_list_not_empty ::= syntax_node:e
+                          {:
+                            RESULT = new ArrayList<>();
+                            RESULT.add(e);
+                          :}
+                      | syntax_nodes_list_not_empty:l COMMA syntax_node:e
+                          {:
+                            l.add(e);
+                            RESULT = l;
+                          :};

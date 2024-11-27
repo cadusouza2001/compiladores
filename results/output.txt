@@ -1,0 +1,79 @@
+=== Symbol Table ===
+  Variable(name='num', type=integer)
+  Variable(name='count', type=integer)
+  Variable(name='isActive', type=boolean)
+  Function(name='add', return=integer, args=(integer a, integer b))
+    Variable(name='a', type=integer)
+    Variable(name='b', type=integer)
+  Function(name='multiply', return=integer, args=(integer a, integer b))
+    Variable(name='a', type=integer)
+    Variable(name='b', type=integer)
+  Function(name='toggleActivity', return=void, args=())
+  Function(name='resetCount', return=void, args=())
+  Function(name='incrementCount', return=integer, args=())
+  Function(name='main', return=void, args=())
+
+
+=== Intermediate Code ===
+
+add:
+param a
+param b
+t0 = t1 PLUS t2
+return t0
+
+multiply:
+param a
+param b
+t3 = t4 TIMES t5
+return t3
+
+toggleActivity:
+t6 = NOT t7
+isActive = t6
+
+resetCount:
+count = t8
+
+incrementCount:
+t9 = t10 PLUS t11
+count = t9
+return t12
+
+main:
+num = t13
+count = t14
+isActive = t15
+ifTrue t16 goto then_0
+ifFalse t16 goto else_1
+t17 = call incrementCount
+count = t17
+t18 = t19 LT t20
+while t18 goto body_2
+t21 = call incrementCount
+count = t21
+t22 = call toggleActivity
+ifTrue t23 goto then_3
+ifFalse t23 goto else_4
+
+body_2:
+t24 = call add
+num = t24
+
+then_0:
+t25 = call add
+num = t25
+
+else_1:
+t26 = call multiply
+num = t26
+
+then_3:
+t27 = call add
+num = t27
+
+else_4:
+t28 = call multiply
+num = t28
+
+

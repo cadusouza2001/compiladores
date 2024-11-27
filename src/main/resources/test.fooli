@@ -1,0 +1,40 @@
+{ class Counter
+    int num;
+    int count;
+    bool isActive;
+
+    int add(int a, int b) {
+        return a + b;
+    }
+
+    int multiply(int a, int b) {
+        return a * b;
+    }
+
+    void toggleActivity() {
+        isActive = not isActive;
+    }
+
+    void resetCount() {
+        count = 0;
+    }
+
+    int incrementCount() {
+        count = count + 1;
+        return count;
+    }
+
+    void main() {
+        num = 10;
+        count = 0;
+        isActive = True;
+
+        if (isActive) num = add(num, 5); else num = multiply(num, 2);
+        count = incrementCount();
+
+        while (count < 10) num = add(num, 3); count = incrementCount();
+
+        toggleActivity();
+        if (isActive) num = add(num, 10); else num = multiply(num, 3);
+    }
+}
